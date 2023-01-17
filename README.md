@@ -1,10 +1,14 @@
 Do delay and sum beamforming
-Usage: ds [options] input_device[index] output_device[index]
+
+./ds to list devices
+
+Usage: ./ds [options] input_device[index] output_device[index]
 
 `./ds --frames=4800 --channels=2 --margin=20 --sample_rate=48000 --display_levels=1 0 0`
 
-Margin (Max(TDOA) = mic distance mm / (343000 / sample_rate)
+Margin (Max(TDOA) = mic distance mm / (343000 / sample_rate) 2mic set to 8
 Set display_levels=0 for silent running
+--frames=4800 seems to work well the more samples fed to tdoa the more accurate but also latency increases 
 
 ```
 Options:
@@ -24,4 +28,10 @@ sudo apt-get install portaudio19-dev libportaudio2
 ```
 
 Margin is the max TDOA which is dictated by mic distance (mm) divided by the factor of speed of sound (343 m/s) divided by sample rate
-60mm mic spacing @ 48Khz = 60 / (343000/48000)
+60mm mic spacing @ 48Khz = 60 / (343000/48000) = 8.39 so a int margin of 8
+16Khz only gives 2.798 so of no use
+
+`/tmp/ds` contains current TDOA so poll to set LEDs
+To monitor `watch -n 0.1 cat /tmp/ds`
+
+
