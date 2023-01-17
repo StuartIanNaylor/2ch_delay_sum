@@ -1,7 +1,7 @@
 Do delay and sum beamforming
 Usage: ds [options] input_device[index] output_device[index]
 
-`ds --frames=4800 --channels=2 --margin=20 --sample_rate=48000 --display_levels=1 0 0`
+`./ds --frames=4800 --channels=2 --margin=20 --sample_rate=48000 --display_levels=1 0 0`
 
 Margin (Max(TDOA) = mic distance mm / (343000 / sample_rate)
 Set display_levels=0 for silent running
