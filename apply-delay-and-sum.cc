@@ -4,6 +4,7 @@
 #include "parse-option.h"
 #include <chrono>
 #include <algorithm>
+#include <stdio.h>
 using namespace std;
 
 struct paConfig
@@ -47,9 +48,26 @@ void paFunc(const float* in, float* out, long frames, void* data){
 	  config->beam_data[j * frames + k ] = in[k * config->channels + j];
     }
   }    
+  
+  FILE *fptr;
+  char beam[2];
+  if((fptr = fopen("/tmp/ds-in","r"))!=NULL) {
+  fscanf(fptr, "%s", beam);
+  int x;
+  sscanf(beam, "%d", &x);
+  config->tdoa[0] = 0;
+  config->tdoa[1] = x;
+  }
+  else {
   // calc delay
   int tao = config->margin < frames / 2 ? config->margin : frames / 2;
   GccPhatTdoa(config->beam_data, config->channels, frames, 0, tao, config->tdoa);
+  }
+  
+  fptr = fopen("/tmp/ds-out","w");
+  fprintf(fptr,"%d",config->tdoa[1]);
+  fclose(fptr);
+  
   if (config->display_levels == 1) {
   for (int j = 0; j < config->channels; j++) {
     printf("tdoa=%d ", config->tdoa[j]);
@@ -57,13 +75,6 @@ void paFunc(const float* in, float* out, long frames, void* data){
   printf("\n");
   }
   
-  
-  FILE *fptr;
-  // use appropriate location if you are using MacOS or Linux
-  fptr = fopen("/tmp/ds","w");
-  fprintf(fptr,"%d",config->tdoa[1]);
-  fclose(fptr);
-
   DelayAndSum(config->in_data, config->channels, frames, config->tdoa, config->out_pcm, config->margin);
   
   float max = 0.0;
