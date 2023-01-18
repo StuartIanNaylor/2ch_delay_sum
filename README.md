@@ -65,6 +65,26 @@ card 3: Loopback [Loopback], device 1: Loopback PCM [Loopback PCM]
   Subdevices: 1/1
   Subdevice #0: subdevice #0
 ```
+```
+./ds
+Devices:
+0: (output) bcm2835 Headphones: - (hw:0,0) (ALSA)
+1: () seeed-2mic-voicecard: bcm2835-i2s-wm8960-hifi wm8960-hifi-0 (hw:2,0) (ALSA)
+2: () Loopback: PCM (hw:3,0) (ALSA)
+3: () Loopback: PCM (hw:3,1) (ALSA)
+4: (output) sysdefault (ALSA)
+5: (output) lavrate (ALSA)
+6: (output) samplerate (ALSA)
+7: (output) speexrate (ALSA)
+8: (output) upmix (ALSA)
+9: (output) vdownmix (ALSA)
+10: (output) playback (ALSA)
+11: (input) capture (ALSA)
+12: (output) dmixed (ALSA)
+13: (input) array (ALSA)
+14: (output) dmix (ALSA)
+15: () default (ALSA) --default--
+```
 Use `./ds --frames=4800 --channels=2 --margin=8 --sample_rate=48000 --display_levels=0 1 2`
 
 `arecord -Dplughw:3,1 -fS16_LE -r16000 -c1 beam.wav`
