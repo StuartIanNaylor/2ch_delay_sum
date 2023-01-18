@@ -96,5 +96,6 @@ To make Pi audio a bit cleaner
 Reboot
 Also to auto load snd-aloop so,ething like
 `echo 'options snd-aloop enable=1,1 index=0,1' | sudo tee /etc/modprobe.d/virtual-sound.conf`
+really you just need one but the above is an example `options snd-aloop enable=1 index=0`
 
 
