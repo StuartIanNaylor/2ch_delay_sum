@@ -31,7 +31,10 @@ Margin is the max TDOA which is dictated by mic distance (mm) divided by the fac
 60mm mic spacing @ 48Khz = 60 / (343000/48000) = 8.39 so a int margin of 8
 16Khz only gives 2.798 so of no use
 
-`/tmp/ds` contains current TDOA so poll to set LEDs
-To monitor `watch -n 0.1 cat /tmp/ds`
+`/tmp/ds-out` contains current TDOA so poll to set LEDs
+To monitor `watch -n 0.1 cat /tmp/ds-out`
+
+To fix the beamformer write a file to `/tmp/ds-in`
+`echo 1 > /tmp/ds-in` sets beam to a delay of 1
 
 
