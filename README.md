@@ -91,4 +91,10 @@ Use `./ds --frames=4800 --channels=2 --margin=8 --sample_rate=48000 --display_le
 
 `make clean` to clean previous `make` to compile on your machine.
 
+To make Pi audio a bit cleaner
+`sudo echo 'blacklist snd_bcm2835' > /etc/modprobe.d/alsa-blacklist.conf`
+Reboot
+Also to auto load snd-aloop so,ething like
+`sudo echo 'options snd-aloop enable=1,1 index=0,1' > /etc/modprobe.d/virtual-sound.conf`
+
 
