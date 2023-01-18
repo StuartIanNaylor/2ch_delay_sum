@@ -37,4 +37,35 @@ To monitor `watch -n 0.1 cat /tmp/ds-out`
 To fix the beamformer write a file to `/tmp/ds-in`
 `echo 1 > /tmp/ds-in` sets beam to a delay of 1
 
+As an example with current setup
+```
+stuart@raspberrypi:~/2ch_delay_sum $ aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: Headphones [bcm2835 Headphones], device 0: bcm2835 Headphones [bcm2835 Headphones]
+  Subdevices: 8/8
+  Subdevice #0: subdevice #0
+  Subdevice #1: subdevice #1
+  Subdevice #2: subdevice #2
+  Subdevice #3: subdevice #3
+  Subdevice #4: subdevice #4
+  Subdevice #5: subdevice #5
+  Subdevice #6: subdevice #6
+  Subdevice #7: subdevice #7
+card 1: vc4hdmi [vc4-hdmi], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 2: seeed2micvoicec [seeed-2mic-voicecard], device 0: bcm2835-i2s-wm8960-hifi wm8960-hifi-0 [bcm2835-i2s-wm8960-hifi wm8960-hifi-0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 3: Loopback [Loopback], device 0: Loopback PCM [Loopback PCM]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 3: Loopback [Loopback], device 1: Loopback PCM [Loopback PCM]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+```
+Use `./ds --frames=4800 --channels=2 --margin=8 --sample_rate=48000 --display_levels=0 1 2`
+
+`arecord -Dplughw:3,1 -fS16_LE -r16000 -c1 beam.wav`
+
 
