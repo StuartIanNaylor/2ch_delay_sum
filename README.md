@@ -89,4 +89,6 @@ Use `./ds --frames=4800 --channels=2 --margin=8 --sample_rate=48000 --display_le
 
 `arecord -Dplughw:3,1 -fS16_LE -r16000 -c1 beam.wav`
 
+`make clean` to clean previous `make` to compile on your machine.
+
 
