@@ -36,6 +36,7 @@ To monitor `watch -n 0.1 cat /tmp/ds-out`
 
 To fix the beamformer write a file to `/tmp/ds-in`
 `echo 1 > /tmp/ds-in` sets beam to a delay of 1
+Delete file to clear and use TDOA
 
 As an example with current setup
 ```
