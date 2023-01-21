@@ -1,5 +1,6 @@
 Do delay and sum beamforming
 
+`sudo apt-get install portaudio19-dev`
 ./ds to list devices
 
 Usage: ./ds [options] input_device[index] output_device[index]
