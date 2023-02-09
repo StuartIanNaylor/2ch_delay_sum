@@ -20,12 +20,6 @@ struct paConfig
 };
 
 void paFunc(const float* in, float* out, long frames, void* data){    
-  using std::chrono::high_resolution_clock;
-  using std::chrono::duration_cast;
-  using std::chrono::duration;
-  using std::chrono::milliseconds;
-
-  auto t1 = high_resolution_clock::now();
 
   paConfig *config = (paConfig*)data;  
   int offset = config->margin * 2;
@@ -49,24 +43,10 @@ void paFunc(const float* in, float* out, long frames, void* data){
     }
   }    
   
-  FILE *fptr;
-  char beam[2];
-  if((fptr = fopen("/tmp/ds-in","r"))!=NULL) {
-  fscanf(fptr, "%s", beam);
-  int x;
-  sscanf(beam, "%d", &x);
-  config->tdoa[0] = 0;
-  config->tdoa[1] = x;
-  }
-  else {
   // calc delay
   int tao = config->margin < frames / 2 ? config->margin : frames / 2;
   GccPhatTdoa(config->beam_data, config->channels, frames, 0, tao, config->tdoa);
-  }
   
-  fptr = fopen("/tmp/ds-out","w");
-  fprintf(fptr,"%d",config->tdoa[1]);
-  fclose(fptr);
   
   if (config->display_levels == 1) {
   for (int j = 0; j < config->channels; j++) {
@@ -109,12 +89,7 @@ void paFunc(const float* in, float* out, long frames, void* data){
 	 //printf("from=%d to=%d ",  k, k - offset);
   }
   
-  auto t2 = high_resolution_clock::now();
-  if (config->display_levels == 1) {
-  duration<double, std::milli> ms_double = t2 - t1;
-  std::cout << ms_double.count() << " ms\n";
-  }
-  //printf("\n");
+  
 }
 
 int main(int argc, char *argv[]) {
@@ -173,7 +148,8 @@ int main(int argc, char *argv[]) {
   a.getDeviceInfo(output_device);
   printf("--frames=%d --channels=%d --margin=%d --sample_rate=%d display_levels=%d input=%d output=%d ", frames, channels, margin, sample_rate, display_levels, input_device, output_device);
   }
-  a.start(Pa::waitForKey);
+  //a.start(Pa::waitForKey);
+  a.start(Pa::wait);
   free(config.out_pcm);
   free(config.tdoa);
   free(config.in_data);

@@ -60,7 +60,7 @@ public:
         for (; i < argc; i++) {
             args_.push_back(argv[i]);
         }
-    }
+    return 0;}
 
     void PrintUsage() {
         std::cerr << "\n" << usage_ << "\n";
@@ -122,9 +122,9 @@ public:
 
     // TODO, safe convert to int and float
     int ToInt(std::string str) {
-    }
+    return 0;}
     int ToFloat(std::string str) {
-    }
+    return 0;}
 
     void SplitLongArg(std::string in, std::string *key,
             std::string *value, bool *has_equal_sign) {

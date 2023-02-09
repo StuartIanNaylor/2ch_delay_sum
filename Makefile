@@ -8,7 +8,7 @@ LIBS = -lportaudio
 LIBS += -L ../libraries/portaudio/build 
 
 CXX = g++
-FLAGS = -std=c++11 -march=native -ffast-math
+FLAGS = -std=c++11 -O3 -march=native
 
 all: $(TARGET)
 

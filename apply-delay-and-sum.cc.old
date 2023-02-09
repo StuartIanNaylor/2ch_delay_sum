@@ -1,0 +1,185 @@
+#include "pa.h"
+#include "tdoa.h"
+#include "ds.h"
+#include "parse-option.h"
+#include <chrono>
+#include <algorithm>
+#include <stdio.h>
+using namespace std;
+
+struct paConfig
+{
+    int channels;
+    int margin;
+    float *out_pcm;
+    int *tdoa;
+    float *in_data;
+    float *beam_data;
+    float *margin_data;
+    int display_levels;
+};
+
+void paFunc(const float* in, float* out, long frames, void* data){    
+  using std::chrono::high_resolution_clock;
+  using std::chrono::duration_cast;
+  using std::chrono::duration;
+  using std::chrono::milliseconds;
+
+  auto t1 = high_resolution_clock::now();
+
+  paConfig *config = (paConfig*)data;  
+  int offset = config->margin * 2;
+  for (int j = 0; j < config->channels; j++) {
+    for (int k = 0; k < offset; k++) {
+		config->in_data[j * (frames + offset) + k] = config->margin_data[k * config->channels + j];
+		//printf("j=%d config->in_data=%f \n",j * (frames + offset) + k, config->in_data[j * (frames + offset) + k]);
+		//printf("to=%d from%d ", j * (frames + offset) + k, k * config->channels + j);
+	}
+	//printf("\n");
+    for (int k = offset; k < frames + offset; k++) {   
+		config->in_data[j * (frames + offset) + k  ] = in[(k - offset) * config->channels + j];
+		//if (k < offset + offset || k > frames) {
+		//printf("index=%d in_data=%f \n", j * (frames + offset) + k , config->in_data[j * (frames + offset) + k  ]);
+		//printf("to=%d from=%d ",j * (frames + offset) + k, (k - offset) * config->channels + j);
+		//}
+    }
+	//printf("\n\n");
+    for (int k = 0; k < frames; k++) { 
+	  config->beam_data[j * frames + k ] = in[k * config->channels + j];
+    }
+  }    
+  
+  FILE *fptr;
+  char beam[2];
+  if((fptr = fopen("/tmp/ds-in","r"))!=NULL) {
+  fscanf(fptr, "%s", beam);
+  int x;
+  sscanf(beam, "%d", &x);
+  config->tdoa[0] = 0;
+  config->tdoa[1] = x;
+  }
+  else {
+  // calc delay
+  int tao = config->margin < frames / 2 ? config->margin : frames / 2;
+  GccPhatTdoa(config->beam_data, config->channels, frames, 0, tao, config->tdoa);
+  }
+  
+  fptr = fopen("/tmp/ds-out","w");
+  fprintf(fptr,"%d",config->tdoa[1]);
+  fclose(fptr);
+  
+  if (config->display_levels == 1) {
+  for (int j = 0; j < config->channels; j++) {
+    printf("tdoa=%d ", config->tdoa[j]);
+    }
+  printf("\n");
+  }
+  
+  DelayAndSum(config->in_data, config->channels, frames, config->tdoa, config->out_pcm, config->margin);
+  
+  float max = 0.0;
+  float average = 0.0;
+  for (int k = 0; k < frames; k++) {
+    out[k] = config->out_pcm[k];
+	//if (k < 16 + offset || k > frames - 16) {
+	//printf("k=%d out=%f ", k, out[k]);
+	//}
+    if (config->display_levels == 1) {
+    float val = config->out_pcm[k];
+    if( val < 0 ) val = -val; /* ABS */
+    if( val > max )
+       {
+         max = val;
+         }
+    average += val;
+      }
+    }
+
+  if (config->display_levels == 1) {
+  average = average / (float)frames;
+  printf("sample max amplitude = %f\n", max );
+  printf("sample average = %f\n", average );
+  printf("frames = %d\n", frames);
+  }
+  int len_array = frames * config->channels;
+  offset = len_array - (config->channels * config->margin * 2);
+  //printf("offset = %d ", offset);
+  for (int k = offset; k < len_array; k++) {
+	 config->margin_data[k - offset] = in[k];
+	 //printf("from=%d to=%d ",  k, k - offset);
+  }
+  
+  
+  if (config->display_levels == 1) {
+  auto t2 = high_resolution_clock::now();
+  duration<double, std::milli> ms_double = t2 - t1;
+  std::cout << ms_double.count() << " ms\n";
+  }
+  //printf("\n");
+}
+
+int main(int argc, char *argv[]) {
+  const char *usage = "Do delay and sum beamforming\n"
+    "Usage: ds [options] input_device[index] output_device[index]\n"
+    "ds --frames=4800 --channels=2 --margin=20 --sample_rate=48000 --display_levels=1 0 0\n"
+    "Margin (Max(TDOA) = mic distance mm / (343000 / sample_rate)\n"
+    "Set display_levels=0 for silent running\n";
+  ParseOptions po(usage);
+  
+  int frames = 4000;
+  po.Register("frames", &frames, 
+    "frame buffer size");        
+  int channels = 2;
+  po.Register("channels", &channels, 
+    "mic input channels");
+  int margin = 16;
+  po.Register("margin", &margin, 
+    "constraint for tdoa estimation");
+  int sample_rate = 48000;
+  po.Register("sample_rate", &sample_rate, 
+    "sample rate");
+  int display_levels = 1;
+  po.Register("display_levels", &display_levels, 
+    "display_levels");  
+  po.Read(argc, argv);
+
+  if (po.NumArgs() != 2) {
+  po.PrintUsage();
+  printf("\n");
+  Pa a(paFunc, channels, 1, 48000, 4800, NULL);
+  a.listDevices();
+  exit(1);
+  }
+  
+  std::string input_string = po.GetArg(1);
+  std::string output_string = po.GetArg(2);
+  int input_device = std::stoi( input_string );
+  int output_device = std::stoi( output_string );
+  
+  struct paConfig config;
+  config.channels = channels;
+  config.margin = margin;
+  config.display_levels = display_levels;
+  config.out_pcm = (float *)calloc(sizeof(float), frames + (margin * 2));
+  config.tdoa = (int *)calloc(sizeof(int), channels);
+  config.in_data = (float *)calloc(sizeof(float), (frames * channels) + (channels * margin * 2));
+  config.beam_data = (float *)calloc(sizeof(float), (frames * channels) + (channels * margin * 2));
+  config.margin_data = (float *)calloc(sizeof(float), (channels * margin * 2));
+  Pa a(paFunc, channels, 1, sample_rate, frames, &config);
+  a.setInputDevice(input_device);
+  a.setOutputDevice(output_device);
+  if (display_levels == 1) {
+  printf("(frames * channels) + (margin * 2)=%d\n", (frames * channels) + (channels * margin * 2));
+  a.getDeviceInfo(input_device);
+  a.getDeviceInfo(output_device);
+  printf("--frames=%d --channels=%d --margin=%d --sample_rate=%d display_levels=%d input=%d output=%d ", frames, channels, margin, sample_rate, display_levels, input_device, output_device);
+  }
+  //a.start(Pa::waitForKey);
+  a.start(Pa::wait);
+  free(config.out_pcm);
+  free(config.tdoa);
+  free(config.in_data);
+  free(config.beam_data);
+  free(config.margin_data);
+  return 0;
+  }
